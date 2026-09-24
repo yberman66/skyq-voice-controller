@@ -15,49 +15,68 @@ network using pyskyqremote.
    Pi Imager. Set hostname `skypi`, enable SSH, set username `pi`.
 
 2. Boot the Pi, SSH in:
+   ```
    ssh pi@skypi.local
+   ```
 
 3. Update the OS:
+   ```
    sudo apt update && sudo apt full-upgrade -y
    sudo reboot
+   ```
 
 4. Install essentials:
+   ```
    sudo apt install python3-pip python3-venv git -y
+   ```
 
 5. Clone this repo:
+   ```
    git clone https://github.com/yberman66/skyq-voice-controller.git ~/skyq-controller
    cd ~/skyq-controller
+   ```
 
 6. Set up the WiFi networks:
    - Copy wifi-setup-template.sh to wifi-setup.sh
    - Fill in the real SSIDs and passwords (get these from wherever you store
      them - e.g. a password manager)
-   - Run it: bash wifi-setup.sh
+   - Run it:
+     ```
+     bash wifi-setup.sh
+     ```
 
 7. Create the virtual environment and install dependencies:
+   ```
    python3 -m venv venv
    source venv/bin/activate
    pip install flask pyskyqremote
+   ```
 
 8. Update SKYQ_BOX_IP in app.py to the actual Sky Q box IP address
    (check on the box: Settings > Setup > Network).
 
 9. Install the systemd service:
+   ```
    sudo cp skyq-controller.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable skyq-controller.service
    sudo systemctl start skyq-controller.service
    sudo systemctl status skyq-controller.service
+   ```
 
 10. Install Tailscale:
+    ```
     curl -fsSL https://tailscale.com/install.sh | sh
     sudo tailscale up
+    ```
     Approve the new device in the Tailscale admin console, and disable key
     expiry for this device.
 
 11. Test:
+    ```
     curl http://skypi.local:8080/health
-    Should return {"status":"ok"}.
+    ```
+    Should return `{"status":"ok"}`.
 
 12. Test the Siri Shortcut (see the Siri Shortcut section below).
 
@@ -69,7 +88,7 @@ that pyskyqremote uses, and Sky Glass almost certainly doesn't either.
 Build a Shortcut on an iPhone or iPad with two actions:
 1. Dictate Text
 2. Get Contents of URL:
-   - URL: http://skypi.local:8080/command
+   - URL: `http://skypi.local:8080/command`
    - Method: POST
    - Request Body: JSON, with a field "phrase" set to the Dictated Text
 
@@ -109,7 +128,9 @@ Siri dictation sometimes mishears phrases. The Pi returns a 400 and logs
 "Unrecognised phrase" for anything not in COMMAND_MAP. Added so far:
 "write" and "write it" (= right), "change up" and "change down" (= channel
 up/down). To find new ones:
-  sudo journalctl -u skyq-controller --no-pager | grep Unrecognised
+```
+sudo journalctl -u skyq-controller --no-pager | grep Unrecognised
+```
 Dictation also picks up background conversation, which shows up as long
 unrecognised phrases in the log.
 
@@ -176,34 +197,47 @@ worth checking directly rather than assuming.
 
 ## Troubleshooting
 
-Siri Shortcut doesn't seem to do anything:
+**Siri Shortcut doesn't seem to do anything:**
 - Check the Pi is powered on and connected to WiFi.
-- From a device on the same WiFi, try: curl http://skypi.local:8080/health
-- Should return {"status":"ok"}. If not, the Flask service isn't running or isn't reachable - see below.
+- From a device on the same WiFi, try:
+  ```
+  curl http://skypi.local:8080/health
+  ```
+- Should return `{"status":"ok"}`. If not, the Flask service isn't running or isn't reachable - see below.
 
-Flask service isn't responding:
-- SSH in (ssh pi@skypi or ssh pi@skypi.local), then check status:
+**Flask service isn't responding:**
+- SSH in (`ssh pi@skypi` or `ssh pi@skypi.local`), then check status:
+  ```
   sudo systemctl status skyq-controller.service
+  ```
 - If not "active (running)", restart it:
+  ```
   sudo systemctl restart skyq-controller.service
   sudo systemctl status skyq-controller.service
+  ```
 - Check logs for errors:
+  ```
   sudo journalctl -u skyq-controller -n 30 --no-pager
+  ```
 
-Command sends but nothing happens on the TV:
+**Command sends but nothing happens on the TV:**
 - Confirm SKYQ_BOX_IP in app.py is still correct - if the router reassigned the box a new IP (no static IP set), this will silently stop working. Check the box's IP directly: Settings > Setup > Network on the Sky Q box.
 - If the IP changed, update SKYQ_BOX_IP in app.py, then:
+  ```
   sudo systemctl restart skyq-controller.service
+  ```
 
-Can't SSH in locally (skypi.local not found):
-- Try Tailscale instead: ssh pi@skypi (works from anywhere, not just local network)
+**Can't SSH in locally (skypi.local not found):**
+- Try Tailscale instead: `ssh pi@skypi` (works from anywhere, not just local network)
 - If that also fails, check Tailscale status on the Pi in person, or plug in a monitor/keyboard directly.
 
-Pi seems unresponsive after a power cut:
+**Pi seems unresponsive after a power cut:**
 - SD cards can occasionally corrupt on sudden power loss. Try a normal reboot/power cycle first.
 - If it doesn't come back at all, see the rebuild steps above - the whole project can be restored from this Git repo in well under an hour.
 
-Need to add or change a phrase the user says:
+**Need to add or change a phrase the user says:**
 - Edit COMMAND_MAP in app.py, then:
+  ```
   sudo systemctl restart skyq-controller.service
+  ```
 - Remember to also git add, commit, and push the change, and update the printed one-page reference card if the wording changes.
