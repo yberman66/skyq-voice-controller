@@ -1,0 +1,15 @@
+[Unit]
+Description=Sky Q Voice Controller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/skyq-controller
+ExecStart=/home/pi/skyq-controller/venv/bin/python /home/pi/skyq-controller/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
