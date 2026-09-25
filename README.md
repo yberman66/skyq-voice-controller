@@ -85,6 +85,7 @@ Works with Sky Q boxes only. Sky Stream does not expose the local interface
 that pyskyqremote uses, and Sky Glass almost certainly doesn't either.
 
 ## Siri Shortcut
+![Sky Q Siri Shortcut](siri-shortcut.png)
 Build a Shortcut on an iPhone or iPad with two actions:
 1. Dictate Text
 2. Get Contents of URL:
@@ -109,6 +110,7 @@ https://github.com/RogerSelwyn/skyq_remote
 
 ## Command map
 See COMMAND_MAP in app.py for the full list of recognised phrases.
+See reference-card.md for the printable one-page card.
 
 ### Macros
 A COMMAND_MAP entry can be a single button or a list of buttons, which
