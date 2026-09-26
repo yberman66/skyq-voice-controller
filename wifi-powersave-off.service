@@ -1,0 +1,10 @@
+[Unit]
+Description=Disable WiFi power save
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iw wlan0 set power_save off
+
+[Install]
+WantedBy=multi-user.target

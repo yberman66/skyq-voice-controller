@@ -80,6 +80,8 @@ network using pyskyqremote.
 
 12. Test the Siri Shortcut (see the Siri Shortcut section below).
 
+13. Install the WiFi power-save fix and connectivity watchdog (see below).
+
 ## Requirements
 Works with Sky Q boxes only. Sky Stream does not expose the local interface
 that pyskyqremote uses, and Sky Glass almost certainly doesn't either.
@@ -143,6 +145,44 @@ unrecognised phrases in the log.
   successfully (logged with a 200). "back" worked.
 - The Sky Q box's IP must match SKYQ_BOX_IP in app.py. If it
   changes, see Troubleshooting.
+
+## Reliability fixes
+
+**WiFi power save.** The Pi Zero 2W's WiFi chip can go into power-saving
+mode and fail to wake, dropping the connection until rebooted. This
+happened after about 12 hours of being left idle overnight. Fixed by:
+```
+sudo cp wifi-powersave-off.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable wifi-powersave-off.service
+sudo systemctl start wifi-powersave-off.service
+```
+This runs `iw wlan0 set power_save off` on every boot.
+
+**Connectivity watchdog.** wifi-watchdog.sh pings 8.8.8.8 every 5 minutes
+(via cron). After 3 consecutive failures it reboots the Pi, with a 30
+minute minimum gap between reboots to avoid a reboot loop. Logs to
+/var/log/wifi-watchdog.log. Installed with:
+```
+sudo cp wifi-watchdog.sh /usr/local/bin/
+sudo chmod +x /usr/local/bin/wifi-watchdog.sh
+sudo crontab -e
+```
+then add:
+```
+*/5 * * * * /usr/local/bin/wifi-watchdog.sh
+```
+
+**Persistent logs.** By default this Pi's logs don't survive a reboot,
+which meant a real outage (Sept 2026) left no evidence of its cause.
+Fixed with:
+```
+sudo mkdir -p /var/log/journal
+sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo systemctl restart systemd-journald
+```
+Already capped at 100M via SystemMaxUse in journald.conf (see Housekeeping
+below), so this doesn't grow unbounded.
 
 ## Housekeeping
 
