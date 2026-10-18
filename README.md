@@ -175,24 +175,30 @@ then add:
 
 **Persistent logs.** By default this Pi's logs don't survive a reboot,
 which meant a real outage (Sept 2026) left no evidence of its cause.
-Fixed with:
+Raspberry Pi OS ships
+`/usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf`, which forces
+`Storage=volatile` and overrides `/etc/systemd/journald.conf`. So creating
+`/var/log/journal` or editing `journald.conf` alone does NOT work (this was
+tried first and silently failed). Fixed with a later-sorting drop-in:
 ```
-sudo mkdir -p /var/log/journal
-sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nStorage=persistent\nSystemMaxUse=100M\n' | sudo tee /etc/systemd/journald.conf.d/99-persistent.conf
 sudo systemctl restart systemd-journald
+sudo journalctl --flush
 ```
-Already capped at 100M via SystemMaxUse in journald.conf (see Housekeeping
-below), so this doesn't grow unbounded.
+Check with `ls /var/log/journal` (should contain a long-named folder) and,
+after a reboot, `journalctl --list-boots` (should list more than one boot).
+Capped at 100M, so this doesn't grow unbounded.
 
 ## Housekeeping
 
 - **Weekly reboot**: cron job set via `sudo crontab -e`, reboots every Sunday
   at 4am (`0 4 * * 0 /sbin/shutdown -r now`). Not stored in this repo - if
   rebuilding, re-add manually.
-- **Log size cap**: `/etc/systemd/journald.conf` has `SystemMaxUse=100M` set,
-  to stop logs slowly filling the SD card. Not stored in this repo - if
-  rebuilding, re-add manually (uncomment and set that line, then
-  `sudo systemctl restart systemd-journald`).
+- **Log size cap**: `SystemMaxUse=100M` is set in
+  `/etc/systemd/journald.conf.d/99-persistent.conf` (see Persistent logs
+  above), to stop logs slowly filling the SD card. Not stored in this repo -
+  if rebuilding, re-add manually.
 
 ## Design Decisions
 
