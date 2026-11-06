@@ -127,11 +127,23 @@ takes several seconds).
   changes it, press home on the real remote, count the presses again, and
   update the numbers in app.py.
 
+### Repeat counts
+A direction followed by a number repeats that button, e.g. "left 3" or
+"down five". Digits and number words (one to ten) both work. This is handled
+by repeat_key() in app.py, which only runs when a phrase isn't an exact match
+in COMMAND_MAP. It applies to left, right, up and down (and "write", the
+common dictation mishearing of "right"). The count is capped at 10
+(MAX_REPEAT) so a misheard number can't send a long run of presses.
+Presses go out about half a second apart. Because dictation often turns "two"
+and "four" into "to" and "for", those spellings are accepted too. Anything
+else, such as "channel 101", is still logged as unrecognised.
+
 ### Dictation mishearings
 Siri dictation sometimes mishears phrases. The Pi returns a 400 and logs
 "Unrecognised phrase" for anything not in COMMAND_MAP. Added so far:
 "write" and "write it" (= right), "change up" and "change down" (= channel
-up/down). To find new ones:
+up/down), "power off", "turn off" and "shut down" (= power, which toggles),
+and "scroll up" and "scroll down" (= up/down). To find new ones:
 ```
 sudo journalctl -u skyq-controller --no-pager | grep Unrecognised
 ```
