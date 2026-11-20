@@ -1,0 +1,22 @@
+[Unit]
+Description=Sky Q Voice Controller (second room)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/skyq-controller
+Environment=PORT=8081
+Environment=SKYQ_BOX_IP=192.168.0.AA
+Environment=TV_IP=192.168.0.BB
+Environment=TV_MAC=aa:bb:cc:dd:ee:ff
+Environment=TV_TOKEN_FILE=/home/pi/tv-token-kitchen.txt
+Environment=SAVED_VOLUME_FILE=/home/pi/saved-volume-kitchen.json
+Environment=SKY_PAUSED_FILE=/home/pi/sky-paused-kitchen.flag
+ExecStart=/home/pi/skyq-controller/venv/bin/python /home/pi/skyq-controller/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
